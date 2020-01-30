@@ -7,27 +7,36 @@ const server = express();
 server.use(express.json());
 
 
-// Global middleware
-server.use((req, res, next) => {
-  console.count('Total request: ');
+/**
+ * Global middleware 
+ * This middleware quantify number of log request
+ */
+function logRequest(req, res, next) {
+  console.count('Total request');
 
   return next();
-});
+}
 
 // middleware to verify if a project exist
 function checkProjectExist(req, res, next) {
-  if (!projects[req.params.id]) {
-    return res.status(400).json({ error: 'Project does not exist!' });
+  const { id } = req.params;
+  const project = projects.find(p => p.id == id);
+
+
+  if (!project) {
+    return res.status(400).json({ error: 'Project not found!' });
   }
 
   return next();
 }
 
+server.use(logRequest);
+
 const projects = [];
 
 // route to list every project
 server.get('/projects', (req, res) => {
-  res.json(projects);
+  return res.json(projects);
 });
 
 // route to create a new project
