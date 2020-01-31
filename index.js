@@ -22,9 +22,22 @@ function checkProjectExist(req, res, next) {
   const { id } = req.params;
   const project = projects.find(p => p.id == id);
 
-
   if (!project) {
     return res.status(400).json({ error: 'Project not found!' });
+  }
+
+  return next();
+}
+
+/**
+ * Before to create a new project verify if project just exist
+ * */
+function projectJustExist(req, res, next) {
+  const { id } = req.body;
+  const project = projects.find(p => p.id == id);
+
+  if (project) {
+    return res.json({ error: 'Project just exist :(' });
   }
 
   return next();
@@ -40,14 +53,14 @@ server.get('/projects', (req, res) => {
 });
 
 // route to create a new project
-server.post('/projects', (req, res) => {
+server.post('/projects', projectJustExist,(req, res) => {
   const { id, title } = req.body;
 
   projects.push({ 
     id,
     title,
     tasks: []
-  });
+  });  
 
   return res.json(projects);
 });
@@ -57,7 +70,9 @@ server.post('/projects/:id/tasks', checkProjectExist,(req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
-  projects[id].tasks.push(title);
+  const projectId = projects.find(p => p.id == id);
+
+  projectId.tasks.push(title);
 
   return res.json(projects);
 });
@@ -67,7 +82,9 @@ server.put('/projects/:id', checkProjectExist,(req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
-  projects[id].title = title;
+  const projectId = projects.find(p => p.id == id);
+
+  projectId.title = title;
 
   return res.json(projects);
 });
@@ -75,8 +92,9 @@ server.put('/projects/:id', checkProjectExist,(req, res) => {
 // route to delete a specific project
 server.delete('/projects/:id', checkProjectExist,(req, res) => {
   const { id } = req.params;
+  const projectId = projects.find(p => p.id == id);
 
-  projects.splice(id, 1);
+  projects.splice(projectId, 1);
 
   return res.send();
 });
